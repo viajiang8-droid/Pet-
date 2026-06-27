@@ -61,14 +61,21 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
-  if (process.platform === 'darwin') {
-    app.dock.hide();
-  }
+// 只允许同时存在一个桌宠：拿不到锁说明已经有一只在跑，直接退出。
+const gotTheLock = app.requestSingleInstanceLock();
 
-  createWindow();
-});
-
-app.on('window-all-closed', () => {
+if (!gotTheLock) {
   app.quit();
-});
+} else {
+  app.whenReady().then(() => {
+    if (process.platform === 'darwin') {
+      app.dock.hide();
+    }
+
+    createWindow();
+  });
+
+  app.on('window-all-closed', () => {
+    app.quit();
+  });
+}
