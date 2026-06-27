@@ -16,14 +16,48 @@ for (let i = 0; i < ANIM.frames; i++) {
 }
 
 const petEl = document.getElementById('pet');
+const bubbleEl = document.getElementById('bubble');
 
 let frame = 0;
+let timer = null;
+let paused = false;
+
 function tick() {
   petEl.src = frames[frame].src;
   frame = (frame + 1) % ANIM.frames; // 到最后一帧就回到第一帧，无限循环
 }
-tick();
-setInterval(tick, 1000 / ANIM.fps);
+
+function startAnim() {
+  if (timer) return;
+  timer = setInterval(tick, 1000 / ANIM.fps);
+}
+
+function stopAnim() {
+  if (timer) { clearInterval(timer); timer = null; }
+}
+
+tick();        // 先显示第一帧
+startAnim();
+
+// ── 菜单动作 ────────────────────────────────────────────────
+let bubbleTimer = null;
+function sayHello() {
+  bubbleEl.classList.remove('hidden');
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(() => bubbleEl.classList.add('hidden'), 2500);
+}
+
+function togglePause() {
+  paused = !paused;
+  if (paused) stopAnim();
+  else startAnim();
+}
+
+// 主进程菜单被点击后回传动作
+window.petAPI.onAction((action) => {
+  if (action === 'hello') sayHello();
+  else if (action === 'toggle-pause') togglePause();
+});
 
 // ── 拖动（保留）：按住小狗拖到桌面任意位置 ──
 let dragging = false;
@@ -31,6 +65,7 @@ let grabX = 0;
 let grabY = 0;
 
 petEl.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return; // 只用左键拖动，右键留给菜单
   dragging = true;
   grabX = e.clientX;
   grabY = e.clientY;
@@ -47,8 +82,8 @@ petEl.addEventListener('pointerup', (e) => {
   petEl.releasePointerCapture(e.pointerId);
 });
 
-// ── 右键退出（保留）──
+// ── 右键菜单：弹出时带上当前暂停状态，让菜单显示「暂停」或「继续」──
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
-  window.petAPI.menu();
+  window.petAPI.menu({ paused });
 });

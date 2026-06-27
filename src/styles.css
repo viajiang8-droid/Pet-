@@ -1,18 +1,22 @@
 html,
 body {
   width: 160px;
-  height: 160px;
+  height: 220px;
   margin: 0;
   overflow: hidden;
   background: transparent;
 }
 
 body {
-  display: grid;
-  place-items: center;
+  position: relative;
 }
 
+/* 桌宠贴底居中，上方留给气泡 */
 .pet {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 160px;
   height: 160px;
   object-fit: contain;
@@ -25,4 +29,40 @@ body {
 
 .pet:active {
   cursor: grabbing;
+}
+
+/* 「你好呀」气泡：显示在桌宠头顶 */
+.bubble {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: #ffffff;
+  color: #333333;
+  border: 1.5px solid #dcdcdc;
+  border-radius: 14px;
+  font: 13px/1.3 -apple-system, "PingFang SC", sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  user-select: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* 气泡下方的小尾巴，指向桌宠 */
+.bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-bottom: 0;
+  border-top-color: #ffffff;
+}
+
+.bubble.hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-4px);
+  pointer-events: none;
 }

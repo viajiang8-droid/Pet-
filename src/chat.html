@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'" />
+    <title>小鸡毛</title>
+    <link rel="stylesheet" href="chat.css" />
+  </head>
+  <body>
+    <header class="chat-header">
+      <img class="header-avatar" src="../assets/pets/little-mao-puppy/frames/walk/01.png" alt="" />
+      <div class="header-title">
+        <div class="header-name">小鸡毛</div>
+        <div class="header-status">在线</div>
+      </div>
+    </header>
+
+    <main id="messages" class="messages"></main>
+
+    <form id="composer" class="composer">
+      <input id="input" class="input" type="text" placeholder="发消息…" autocomplete="off" />
+      <button id="send" class="send" type="submit" aria-label="发送">↑</button>
+    </form>
+
+    <script src="chat.js"></script>
+  </body>
+</html>
