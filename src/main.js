@@ -1,5 +1,7 @@
 const { app, BrowserWindow, ipcMain, Menu, screen } = require('electron');
 const path = require('path');
+const { readConfig, writeConfig } = require('./config');
+const { streamChat } = require('./ai');
 
 const WIN_W = 160;        // 宽度（容纳桌宠本体）
 const WIN_H = 220;        // 高度多留 60px，给头顶的「你好呀」气泡用
@@ -52,6 +54,7 @@ function createWindow() {
     const menu = Menu.buildFromTemplate([
       { label: '打招呼', click: () => send('hello') },
       { label: '聊天…', click: () => openChatWindow() },
+      { label: '设置…', click: () => openSettingsWindow() },
       { type: 'separator' },
       { label: state.paused ? '继续' : '暂停', click: () => send('toggle-pause') },
       { type: 'separator' },
@@ -64,12 +67,16 @@ function createWindow() {
 // 聊天窗口：独立的普通窗口（不透明、可调整大小、带原生标题栏按钮）。
 // 已经开着就直接聚焦，避免开出多个。
 let chatWin = null;
+let chatHistory = [];     // 当前会话上下文，开新窗口时清空
+let currentAbort = null;  // 用于打断上一条未完成的请求
+
 function openChatWindow() {
   if (chatWin && !chatWin.isDestroyed()) {
     chatWin.show();
     chatWin.focus();
     return;
   }
+  chatHistory = [];
   chatWin = new BrowserWindow({
     width: 380,
     height: 560,
@@ -80,6 +87,7 @@ function openChatWindow() {
     backgroundColor: '#ffffff',
     show: false,
     webPreferences: {
+      preload: path.join(__dirname, 'chat-preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -91,6 +99,78 @@ function openChatWindow() {
   });
   chatWin.on('closed', () => { chatWin = null; });
 }
+
+// 设置窗口：填写 API Key / 模型 / 接口地址
+let settingsWin = null;
+function openSettingsWindow() {
+  if (settingsWin && !settingsWin.isDestroyed()) {
+    settingsWin.show();
+    settingsWin.focus();
+    return;
+  }
+  settingsWin = new BrowserWindow({
+    width: 440,
+    height: 380,
+    resizable: false,
+    title: '设置',
+    titleBarStyle: 'hiddenInset',
+    backgroundColor: '#ffffff',
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'settings-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+  settingsWin.loadFile(path.join(__dirname, 'settings.html'));
+  settingsWin.once('ready-to-show', () => {
+    settingsWin.show();
+    settingsWin.focus();
+  });
+  settingsWin.on('closed', () => { settingsWin = null; });
+}
+
+// ── 聊天相关 IPC ──
+ipcMain.handle('chat:config-status', () => {
+  const cfg = readConfig();
+  return { hasKey: !!cfg.apiKey, model: cfg.model };
+});
+
+ipcMain.on('chat:open-settings', () => openSettingsWindow());
+
+ipcMain.on('chat:send', async (event, text) => {
+  const wc = event.sender;
+  chatHistory.push({ role: 'user', content: text });
+
+  if (currentAbort) currentAbort.abort();
+  currentAbort = new AbortController();
+
+  try {
+    const full = await streamChat(chatHistory, {
+      signal: currentAbort.signal,
+      onDelta: (chunk) => wc.send('chat:delta', chunk)
+    });
+    chatHistory.push({ role: 'assistant', content: full });
+    wc.send('chat:done');
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    // 这条没成功，别把它留在上下文里
+    chatHistory.pop();
+    wc.send('chat:error', { code: err.code || null, message: err.message || String(err) });
+  }
+});
+
+// ── 设置相关 IPC ──
+ipcMain.handle('settings:get', () => readConfig());
+
+ipcMain.on('settings:save', (event, partial) => {
+  writeConfig(partial);
+  if (chatWin && !chatWin.isDestroyed()) {
+    chatWin.webContents.send('chat:config-changed');
+  }
+  const w = BrowserWindow.fromWebContents(event.sender);
+  if (w) w.close();
+});
 
 // 只允许同时存在一个桌宠：拿不到锁说明已经有一只在跑，直接退出。
 const gotTheLock = app.requestSingleInstanceLock();

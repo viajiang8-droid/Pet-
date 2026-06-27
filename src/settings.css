@@ -1,0 +1,97 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  color: #1d1d1f;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.title-bar {
+  flex: 0 0 auto;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid #ececec;
+  -webkit-app-region: drag; /* 可拖动窗口 */
+}
+
+.form {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6e6e73;
+}
+
+.input {
+  height: 34px;
+  padding: 0 11px;
+  font-size: 13px;
+  border: 1px solid #d6d6d6;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+}
+
+.input:focus {
+  border-color: #007aff;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.hint {
+  font-size: 11px;
+  color: #9b9b9f;
+}
+
+.actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.status {
+  font-size: 12px;
+  color: #34c759;
+  margin-right: auto;
+}
+
+.save {
+  height: 32px;
+  padding: 0 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #007aff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.save:hover {
+  background: #0067d6;
+}

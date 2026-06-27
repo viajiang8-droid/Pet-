@@ -59,6 +59,50 @@ body {
   color: #8e8e93;
 }
 
+/* ── 未配置 Key 时的提示横幅 ── */
+.banner {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #8a6d00;
+  background: #fff5d6;
+  border-bottom: 1px solid #f0e3a8;
+}
+
+.banner.hidden {
+  display: none;
+}
+
+.banner-btn {
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #007aff;
+  border: none;
+  border-radius: 13px;
+  cursor: pointer;
+}
+
+.banner-btn:hover {
+  background: #0067d6;
+}
+
+/* 出错/系统提示行（居中灰字）*/
+.system-note {
+  align-self: center;
+  max-width: 86%;
+  text-align: center;
+  font-size: 12px;
+  color: #9b9b9f;
+  padding: 2px 8px;
+}
+
 /* ── 消息列表 ── */
 .messages {
   flex: 1 1 auto;

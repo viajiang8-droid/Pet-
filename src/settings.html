@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'none'; style-src 'self'; script-src 'self'" />
+    <title>设置</title>
+    <link rel="stylesheet" href="settings.css" />
+  </head>
+  <body>
+    <header class="title-bar">设置</header>
+
+    <form id="form" class="form">
+      <label class="field">
+        <span class="label">API Key</span>
+        <input id="apiKey" class="input" type="password" placeholder="sk-or-..." autocomplete="off" />
+        <span class="hint">在 openrouter.ai/keys 创建，仅保存在本机</span>
+      </label>
+
+      <label class="field">
+        <span class="label">模型名称</span>
+        <input id="model" class="input" type="text" placeholder="google/gemini-3.1-flash-lite" autocomplete="off" />
+      </label>
+
+      <label class="field">
+        <span class="label">接口地址</span>
+        <input id="baseURL" class="input" type="text" autocomplete="off" />
+      </label>
+
+      <div class="actions">
+        <span id="status" class="status"></span>
+        <button id="save" class="save" type="submit">保存</button>
+      </div>
+    </form>
+
+    <script src="settings.js"></script>
+  </body>
+</html>
