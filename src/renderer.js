@@ -1,8 +1,6 @@
-// ── 待机动画：原地循环播放 scratch 这组逐帧图片 ──────────────
-// 一组动作 = 一串图片，按固定速度依次切换，就成了循环动画。
-
+// ── 桌宠：平时静止，鼠标滑到身上才动一动并打招呼 ────────────
 const FRAMES_BASE = '../assets/pets/little-mao-puppy/frames';
-const ANIM = { name: 'scratch', frames: 6, fps: 10 }; // scratch 共 6 帧
+const ANIM = { name: 'scratch', frames: 6, fps: 10 }; // 用 scratch 这组动作
 
 const padded = (i) => String(i + 1).padStart(2, '0');
 const framePath = (i) => `${FRAMES_BASE}/${ANIM.name}/${padded(i)}.png`;
@@ -20,15 +18,14 @@ const bubbleEl = document.getElementById('bubble');
 
 let frame = 0;
 let timer = null;
-let paused = false;
 
 function tick() {
   petEl.src = frames[frame].src;
-  frame = (frame + 1) % ANIM.frames; // 到最后一帧就回到第一帧，无限循环
+  frame = (frame + 1) % ANIM.frames;
 }
 
 function startAnim() {
-  if (timer) return;
+  if (timer) return;            // 已经在动了就不重复开
   timer = setInterval(tick, 1000 / ANIM.fps);
 }
 
@@ -36,10 +33,16 @@ function stopAnim() {
   if (timer) { clearInterval(timer); timer = null; }
 }
 
-tick();        // 先显示第一帧
-startAnim();
+// 回到静止：停在第一帧
+function showStill() {
+  stopAnim();
+  frame = 0;
+  petEl.src = frames[0].src;
+}
 
-// ── 菜单动作 ────────────────────────────────────────────────
+showStill(); // 默认静止不动
+
+// ── 打招呼气泡 ──
 let bubbleTimer = null;
 function sayHello() {
   bubbleEl.classList.remove('hidden');
@@ -47,16 +50,19 @@ function sayHello() {
   bubbleTimer = setTimeout(() => bubbleEl.classList.add('hidden'), 2500);
 }
 
-function togglePause() {
-  paused = !paused;
-  if (paused) stopAnim();
-  else startAnim();
-}
+// ── 鼠标滑到身上：动起来 + 打招呼；移开就停 ──
+petEl.addEventListener('pointerenter', () => {
+  startAnim();
+  sayHello();
+});
 
-// 主进程菜单被点击后回传动作
+petEl.addEventListener('pointerleave', () => {
+  if (!dragging) showStill();   // 拖动时别打断
+});
+
+// 右键菜单里的「打招呼」也走这里
 window.petAPI.onAction((action) => {
   if (action === 'hello') sayHello();
-  else if (action === 'toggle-pause') togglePause();
 });
 
 // ── 拖动（保留）：按住小狗拖到桌面任意位置 ──
@@ -82,8 +88,8 @@ petEl.addEventListener('pointerup', (e) => {
   petEl.releasePointerCapture(e.pointerId);
 });
 
-// ── 右键菜单：弹出时带上当前暂停状态，让菜单显示「暂停」或「继续」──
+// ── 右键菜单 ──
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
-  window.petAPI.menu({ paused });
+  window.petAPI.menu();
 });

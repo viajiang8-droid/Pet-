@@ -48,15 +48,13 @@ function createWindow() {
 
   // 右键菜单（Mac 原生样式）。菜单项点击后通过 pet:action 通知页面去执行。
   // state.paused 由页面在弹菜单时带上，用来决定显示「暂停」还是「继续」。
-  ipcMain.on('pet:menu', (event, state = {}) => {
+  ipcMain.on('pet:menu', (event) => {
     const w = BrowserWindow.fromWebContents(event.sender);
     const send = (action) => event.sender.send('pet:action', action);
     const menu = Menu.buildFromTemplate([
       { label: '打招呼', click: () => send('hello') },
       { label: '聊天…', click: () => openChatWindow() },
       { label: '设置…', click: () => openSettingsWindow() },
-      { type: 'separator' },
-      { label: state.paused ? '继续' : '暂停', click: () => send('toggle-pause') },
       { type: 'separator' },
       { label: '退出 小鸡毛', click: () => app.quit() }
     ]);
