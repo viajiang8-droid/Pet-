@@ -1,7 +1,7 @@
 html,
 body {
-  width: 160px;
-  height: 220px;
+  width: 100%;
+  height: 100%;
   margin: 0;
   overflow: hidden;
   background: transparent;
@@ -20,8 +20,7 @@ body {
   width: 160px;
   height: 160px;
   object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  image-rendering: auto; /* 点点是小尺寸位图、放大显示，平滑渲染更好看 */
   user-select: none;
   -webkit-user-drag: none;
   cursor: grab;
@@ -65,4 +64,31 @@ body {
   opacity: 0;
   transform: translateX(-50%) translateY(-4px);
   pointer-events: none;
+}
+
+/* Claude 运行状态：单行、带活动感的脉冲光晕 */
+.bubble.status {
+  white-space: nowrap;
+  font-size: 13px;
+  animation: statusPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18); }
+  50% { box-shadow: 0 0 13px rgba(0, 122, 255, 0.55); }
+}
+
+/* 长内容（截图翻译结果）：左右留边占满宽度、允许换行、过长可滚动 */
+.bubble.long {
+  left: 12px;
+  right: 12px;
+  width: auto;
+  max-width: none;
+  transform: none;          /* 不再用 translateX 居中，改为左右留边 */
+  white-space: pre-wrap;
+  text-align: left;
+  max-height: 150px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.4;
 }
