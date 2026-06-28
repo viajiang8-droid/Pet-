@@ -1,11 +1,11 @@
-const { app, BrowserWindow, ipcMain, Menu, screen, globalShortcut, clipboard, systemPreferences } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, screen, globalShortcut, dialog, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { execFile } = require('child_process');
 const { promisify } = require('util');
 const { readConfig, writeConfig } = require('./config');
-const { streamChat, translateText } = require('./ai');
+const { streamChat, translateImage } = require('./ai');
 
 const execFileP = promisify(execFile);
 
@@ -195,61 +195,66 @@ ipcMain.on('settings:save', (event, partial) => {
   if (w) w.close();
 });
 
-// ── 划词翻译：Control+Command+A 复制选中文字 → 英译中 → 显示在桌宠头顶气泡 ──
+// ── 截图翻译：Control+Command+A 框选区域 → 截图 → 多模态识别英文翻成中文 → 原生弹框 ──
 function petBubble(text, sticky) {
   if (petWin && !petWin.isDestroyed()) {
     petWin.webContents.send('pet:bubble', { text, sticky });
   }
 }
 
-// 用 AppleScript 模拟 Cmd+C，把当前选中内容复制到剪贴板（需「辅助功能」权限）
-function copySelection() {
-  return execFileP('osascript', [
-    '-e',
-    'tell application "System Events" to keystroke "c" using command down'
-  ]);
+// 用 macOS 原生 screencapture 让用户框选一块区域，结果存成 PNG 文件。
+//   -i 交互式框选；-x 不播放快门声。用户按 Esc 取消时不会生成文件。
+function captureRegion(outPath) {
+  return execFileP('screencapture', ['-i', '-x', outPath]);
+}
+
+// 把翻译结果显示在 macOS 原生弹框里（最接近「系统默认弹框」）。
+function showResultDialog(message) {
+  dialog.showMessageBox(petWin && !petWin.isDestroyed() ? petWin : null, {
+    type: 'none',
+    title: '点点翻译',
+    message: '翻译结果',
+    detail: message,
+    buttons: ['好的'],
+    defaultId: 0,
+    noLink: true
+  });
 }
 
 let translating = false;
-async function translateSelection() {
-  console.log('[hotkey] 触发翻译，accessibility trusted =',
-    process.platform === 'darwin' ? systemPreferences.isTrustedAccessibilityClient(false) : 'n/a');
-  if (!petWin || petWin.isDestroyed() || translating) return;
+async function translateScreenshot() {
+  if (translating) return;
 
-  // 没有「辅助功能」权限就没法模拟 Cmd+C。主动请求一次：
-  // 这会弹出系统提示并把本应用加入 系统设置→辅助功能 的列表，方便用户打开。
-  if (process.platform === 'darwin' && !systemPreferences.isTrustedAccessibilityClient(false)) {
-    systemPreferences.isTrustedAccessibilityClient(true);
-    petBubble('请在 系统设置→隐私与安全性→辅助功能 里打开「Electron」，然后重试', false);
+  // macOS 截屏需要「屏幕录制」权限。没授权先提示并打开设置面板。
+  if (process.platform === 'darwin' &&
+      systemPreferences.getMediaAccessStatus('screen') !== 'granted') {
+    petBubble('请在 系统设置→隐私与安全性→屏幕录制 里打开「Electron」，然后重试', false);
     return;
   }
 
   translating = true;
-  const previousClip = clipboard.readText(); // 记下原剪贴板，稍后还原
+  const tmp = path.join(os.tmpdir(), `pet-shot-${Date.now()}.png`);
   try {
-    clipboard.writeText('');                  // 先清空，便于判断是否真的复制到了东西
-    await copySelection();
-    await new Promise((r) => setTimeout(r, 200)); // 等剪贴板更新
-    const text = clipboard.readText().trim();
-    if (!text) {
-      petBubble('选中文字再按快捷键哦', false);
-      return;
-    }
+    await captureRegion(tmp);
+    // 用户取消（按 Esc）→ 不会有文件，静默结束
+    if (!fs.existsSync(tmp) || fs.statSync(tmp).size === 0) return;
+
     petBubble('翻译中…', true);
-    const out = await translateText(text);
-    petBubble(out && out.trim() ? out.trim() : '（没有结果）', false);
+    const b64 = fs.readFileSync(tmp).toString('base64');
+    const out = (await translateImage(b64) || '').trim();
+    petBubble('', false); // 收起「翻译中…」气泡
+    showResultDialog(out || '（没识别到可翻译的英文）');
   } catch (err) {
+    petBubble('', false);
     let msg;
     if (err.code === 'NO_API_KEY') {
       msg = '请先在「设置」里填 API Key';
-    } else if (/assistive|accessibility|not allowed|1002|-1719|osascript/i.test(err.message || '')) {
-      msg = '需要在「辅助功能」里授权后才能读取选中文字';
     } else {
       msg = '翻译失败：' + (err.message || '请求出错');
     }
-    petBubble(msg, false);
+    showResultDialog(msg);
   } finally {
-    clipboard.writeText(previousClip);        // 还原剪贴板，不打扰用户
+    try { fs.unlinkSync(tmp); } catch { /* 文件可能不存在，忽略 */ }
     translating = false;
   }
 }
@@ -306,7 +311,7 @@ if (!gotTheLock) {
     }
 
     createWindow();
-    const regOk = globalShortcut.register('Control+Command+A', translateSelection);
+    const regOk = globalShortcut.register('Control+Command+A', translateScreenshot);
     console.log('[shortcut] Control+Command+A registered =', regOk,
       '| isRegistered =', globalShortcut.isRegistered('Control+Command+A'));
 

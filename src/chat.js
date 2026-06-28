@@ -1,5 +1,5 @@
 // ── 聊天逻辑：接 OpenRouter 真 AI，流式 + 打字机效果 ──────────
-const PET_AVATAR = '../assets/pets/diandian/frames/zoulu/01.png';
+const PET_AVATAR = '../assets/pets/diandian/frames/moren/01.png';
 
 const messagesEl = document.getElementById('messages');
 const form = document.getElementById('composer');

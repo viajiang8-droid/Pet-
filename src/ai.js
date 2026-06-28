@@ -10,6 +10,11 @@ const TRANSLATE_SYSTEM =
   '只输出中文译文本身，不要解释、不要保留英文原文。' +
   '如果输入不是英文，就直接把它翻译成中文或如实说明。';
 
+const IMG_TRANSLATE_SYSTEM =
+  '你是 OCR + 翻译助手。识别图片里的英文文字，翻译成简洁、自然的中文。' +
+  '按原文的段落/换行组织，只输出中文译文本身，不要解释、不要保留英文原文。' +
+  '如果图里没有可识别的英文，就如实说明。';
+
 // 公共流式核心：发请求 + 解析 SSE。onDelta 可选；返回完整文本。
 async function streamCompletion(messages, { onDelta, signal } = {}) {
   const cfg = readConfig();
@@ -110,4 +115,19 @@ function translateText(text) {
   ]);
 }
 
-module.exports = { streamChat, translateText };
+// 截图翻译：把一张 PNG 截图交给多模态模型，识别英文并翻成中文（非流式）。
+// base64Png 是不带前缀的 base64 字符串。
+function translateImage(base64Png) {
+  return complete([
+    { role: 'system', content: IMG_TRANSLATE_SYSTEM },
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: '识别这张图里的英文并翻译成中文，只输出中文译文。' },
+        { type: 'image_url', image_url: { url: `data:image/png;base64,${base64Png}` } }
+      ]
+    }
+  ]);
+}
+
+module.exports = { streamChat, translateText, translateImage };

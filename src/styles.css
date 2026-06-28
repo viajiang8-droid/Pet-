@@ -66,6 +66,19 @@ body {
   pointer-events: none;
 }
 
+/* 状态提示语（自我介绍/休息/反应）：左右留边、自动换行、居中 */
+.bubble.speech {
+  left: 20px;
+  right: 20px;
+  width: auto;
+  max-width: none;
+  transform: none;
+  white-space: normal;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 /* Claude 运行状态：单行、带活动感的脉冲光晕 */
 .bubble.status {
   white-space: nowrap;

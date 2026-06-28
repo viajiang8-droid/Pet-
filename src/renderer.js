@@ -41,32 +41,44 @@ function play(name) {
   }, 1000 / ANIMS[name].fps);
 }
 
-// 回到默认活动状态，并开始 20 秒倒计时（到点没互动就去睡觉）
-function goDefault() {
-  play(DEFAULT_ANIM);
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => play('sleep'), SLEEP_AFTER_MS);
+// ── 头顶气泡 ──
+let bubbleHideTimer = null;
+let speechTimer = null;
+let bubbleBusy = false;   // 翻译 / Claude 状态占用气泡时，普通提示别打断
+
+// 头部说一句话（自动换行的小气泡，约 3.5 秒后消失）
+function say(text) {
+  if (bubbleBusy) return;
+  clearTimeout(speechTimer);
+  bubbleEl.classList.remove('long', 'status', 'hidden');
+  bubbleEl.classList.add('speech');
+  bubbleEl.textContent = text;
+  window.petAPI.resize(240, 240);
+  speechTimer = setTimeout(() => {
+    if (bubbleBusy) return;            // 已被翻译/状态接管就别还原
+    bubbleEl.classList.add('hidden');
+    bubbleEl.classList.remove('speech');
+    window.petAPI.resize(160, 220);
+  }, 3500);
 }
 
-goDefault(); // 启动即默认活动状态
+// 回到默认活动状态：播放 moren + 自我介绍，并开始 20 秒倒计时
+function goDefault() {
+  play(DEFAULT_ANIM);
+  say('Hi, 我叫点点，请开始你的表演');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(enterSleep, SLEEP_AFTER_MS);
+}
 
-// ── 头顶气泡：短问候 + 长内容（截图翻译结果）──
-let bubbleTimer = null;
-let bubbleHideTimer = null;
-let bubbleBusy = false;   // 正在显示长气泡（翻译）时，别被悬停问候打断
-
-function sayHello() {
-  if (bubbleBusy) return;
-  bubbleEl.classList.remove('long');
-  bubbleEl.textContent = '你好呀';
-  bubbleEl.classList.remove('hidden');
-  clearTimeout(bubbleTimer);
-  bubbleTimer = setTimeout(() => bubbleEl.classList.add('hidden'), 2500);
+// 20 秒没互动 → 去休息
+function enterSleep() {
+  play('sleep');
+  say('我要歇一会啦');
 }
 
 // 显示一段较长的内容：窗口临时变大以容纳多行气泡
 function showBubble(text, sticky) {
-  clearTimeout(bubbleTimer);
+  clearTimeout(speechTimer);
   clearTimeout(bubbleHideTimer);
   bubbleBusy = true;
   bubbleEl.textContent = text;
@@ -80,16 +92,16 @@ function showBubble(text, sticky) {
 
 function hideBubble() {
   bubbleEl.classList.add('hidden');
-  bubbleEl.classList.remove('long');
+  bubbleEl.classList.remove('long', 'speech');
   bubbleBusy = false;
   window.petAPI.resize(160, 220); // 还原窗口大小
 }
 
-// ── 鼠标摸一下：播放 week 反应 + 打招呼（互动 → 取消睡觉倒计时）──
+// ── 鼠标摸一下：播放 week 反应 + 提示（互动 → 取消睡觉倒计时）──
 petEl.addEventListener('pointerenter', () => {
   clearTimeout(idleTimer);
   play('week');
-  sayHello();
+  say('有什么好消息呀');
 });
 
 // 移开：回到默认活动状态，并重新开始 20 秒倒计时
@@ -99,11 +111,14 @@ petEl.addEventListener('pointerleave', () => {
 
 // 右键菜单里的「打招呼」
 window.petAPI.onAction((action) => {
-  if (action === 'hello') sayHello();
+  if (action === 'hello') say('你好呀');
 });
 
-// 主进程要在头顶气泡里显示内容（截图翻译）
-window.petAPI.onBubble(({ text, sticky }) => showBubble(text, sticky));
+// 主进程要在头顶气泡里显示内容（截图翻译）。空文本表示收起气泡。
+window.petAPI.onBubble(({ text, sticky }) => {
+  if (text) showBubble(text, sticky);
+  else hideBubble();
+});
 
 // ── Claude 运行状态提示框 ──
 let claudeTimer = null;
@@ -119,11 +134,11 @@ function fmtDur(ms) {
 }
 
 function showClaudeStatus() {
-  clearTimeout(bubbleTimer);
+  clearTimeout(speechTimer);
   clearTimeout(bubbleHideTimer);
   bubbleBusy = true;
   claudeStart = Date.now();
-  bubbleEl.classList.remove('long', 'hidden');
+  bubbleEl.classList.remove('long', 'speech', 'hidden');
   bubbleEl.classList.add('status');
   bubbleEl.textContent = '🐾 Claude 运行中 · 0:00';
   window.petAPI.resize(240, 220);
@@ -175,3 +190,6 @@ window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   window.petAPI.menu();
 });
+
+// 启动：进入默认活动状态（播放 moren + 自我介绍 + 开始 20 秒倒计时）
+goDefault();
