@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'none'; style-src 'self'; script-src 'self'" />
+    <title>创建我的宠物</title>
+    <link rel="stylesheet" href="create-pet.css" />
+  </head>
+  <body>
+    <header class="title-bar">创建我的宠物</header>
+
+    <form id="form" class="form" novalidate>
+      <!-- 第一项：宠物名称 -->
+      <section class="field">
+        <span class="label">宠物名称</span>
+        <input id="name" class="input" type="text" maxlength="12"
+               placeholder="给它取个名字吧～" autocomplete="off" />
+        <span id="error" class="error" aria-live="polite"></span>
+      </section>
+
+      <!-- 第二项：宠物类型（10 个品种圆形头像） -->
+      <section class="field">
+        <span class="label">选择宠物类型</span>
+        <div id="breeds" class="breeds"><!-- 头像由 create-pet.js 生成 --></div>
+      </section>
+
+      <footer class="actions">
+        <button id="cancel" class="btn ghost" type="button">取消</button>
+        <button id="confirm" class="btn primary" type="submit">确认</button>
+      </footer>
+    </form>
+
+    <script src="create-pet.js"></script>
+  </body>
+</html>

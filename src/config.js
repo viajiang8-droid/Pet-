@@ -6,9 +6,12 @@ const fs = require('fs');
 
 const DEFAULTS = {
   baseURL: 'https://openrouter.ai/api/v1/chat/completions',
-  // gpt-4o-mini 已于 2026-03-31 退役，改用 OpenRouter 上便宜稳定的 gemini flash-lite
-  model: 'google/gemini-3.1-flash-lite',
-  apiKey: ''
+  // gemini-flash-lite 在 OpenRouter 上会间歇路由到对部分区域受限的端点 → 偶发 403
+  //「This model is not available in your region」。改用区域稳定、中文好、便宜的 deepseek-chat。
+  model: 'deepseek/deepseek-chat',
+  apiKey: '',
+  petName: '',     // 「创建我的宠物」里填写的名称
+  petBreed: ''     // 「创建我的宠物」里选中的品种 id
 };
 
 function configPath() {

@@ -5,7 +5,9 @@
   "main": "src/main.js",
   "scripts": {
     "start": "./node_modules/electron/dist/Electron.app/Contents/MacOS/Electron .",
-    "dist": "electron-builder --mac"
+    "sync-frames": "bash scripts/sync-frames.sh",
+    "dist": "electron-builder --mac",
+    "release": "bash scripts/release.sh"
   },
   "devDependencies": {
     "electron": "^31.7.7",
@@ -23,6 +25,11 @@
       "assets/pets/diandian/**/*",
       "package.json"
     ],
+    "asarUnpack": [
+      "**/*.node",
+      "node_modules/uiohook-napi/**",
+      "node_modules/node-gyp-build/**"
+    ],
     "mac": {
       "icon": "build/icon.icns",
       "category": "public.app-category.entertainment",
@@ -31,5 +38,8 @@
       ],
       "identity": null
     }
+  },
+  "dependencies": {
+    "uiohook-napi": "^1.5.5"
   }
 }

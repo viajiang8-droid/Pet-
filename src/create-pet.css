@@ -1,0 +1,189 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  color: #1d1d1f;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+.title-bar {
+  flex: 0 0 auto;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid #ececec;
+  -webkit-app-region: drag; /* 可拖动窗口 */
+}
+
+.form {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6e6e73;
+}
+
+/* ── 名称输入 ── */
+.input {
+  height: 38px;
+  padding: 0 12px;
+  font-size: 14px;
+  border: 1px solid #d6d6d6;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input:focus {
+  border-color: #007aff;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.input.invalid {
+  border-color: #ff3b30;
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.15);
+}
+
+.error {
+  font-size: 11px;
+  color: #ff3b30;
+  min-height: 14px;
+}
+
+/* 名称为空提示时轻轻抖一下 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+.shake { animation: shake 0.3s; }
+
+/* ── 品种头像网格（5 × 2） ── */
+.breeds {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px 6px;
+}
+
+.breed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+/* 1:1 圆形头像 */
+.avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.breed:hover .avatar {
+  transform: translateY(-2px);
+}
+
+.breed-name {
+  font-size: 11px;
+  color: #6e6e73;
+  white-space: nowrap;
+}
+
+/* 选中态：蓝色描边 + 右下角对勾 */
+.breed.selected .avatar {
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #007aff;
+}
+
+.breed.selected .breed-name {
+  color: #007aff;
+  font-weight: 600;
+}
+
+.breed.selected .avatar::after {
+  content: "✓";
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #007aff;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* ── 底部按钮 ── */
+.actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.btn {
+  height: 34px;
+  padding: 0 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  -webkit-app-region: no-drag;
+}
+
+.btn.ghost {
+  background: #f2f2f4;
+  color: #1d1d1f;
+}
+.btn.ghost:hover { background: #e8e8ea; }
+
+.btn.primary {
+  background: #007aff;
+  color: #ffffff;
+}
+.btn.primary:hover { background: #0067d6; }
